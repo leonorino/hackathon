@@ -1,0 +1,114 @@
+{% block body %}
+<div class="w-full max-w-2xl mx-auto" x-data="{ 
+    current: 300, 
+    voltage: 4.0, 
+    temperature: 950, 
+    concentration: 4,
+    updateTimeout: null,
+    updateValues() {
+        clearTimeout(this.updateTimeout);
+        this.updateTimeout = setTimeout(() => {
+            fetch('/api/update-values', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({current: this.current, voltage: this.voltage, temperature: this.temperature, concentration: this.concentration})
+            })
+        }, 1000);
+    }
+}">
+    <h1 class="text-3xl font-bold text-center text-gray-800 mb-8"></h1>
+
+    <div class="bg-white rounded-xl shadow-lg p-6 space-y-8">
+        <div class="space-y-4" x-data="{ minCurrent: 150, maxCurrent: 450 }">
+            <div class="flex justify-between items-center">
+                <label for="current-slider" class="block text-lg font-medium text-gray-700">Сила тока (I)</label>
+                <span class="text-lg font-semibold text-indigo-600" x-text="current + ' A'"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                <span x-text="minCurrent"></span>
+                <span x-text="maxCurrent"></span>
+            </div>
+            <div class="relative">
+                <input
+                    id="current-slider"
+                    type="range"
+                    :min="minCurrent"
+                    :max="maxCurrent"
+                    x-model="current"
+                    @input="updateValues()"
+                    class="slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                >
+            </div>
+        </div>
+
+        <div class="space-y-4" x-data="{ minVoltage: 3.5, maxVoltage: 5.0 }">
+            <div class="flex justify-between items-center">
+                <label for="current-slider" class="block text-lg font-medium text-gray-700">Напряжение на Ванне (U)</label>
+                <span class="text-lg font-semibold text-indigo-600" x-text="voltage + ' В'"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                <span x-text="minVoltage"></span>
+                <span x-text="maxVoltage"></span>
+            </div>
+            <div class="relative">
+                <input
+                    id="voltage-slider"
+                    type="range"
+                    :min="minVoltage"
+                    :max="maxVoltage"
+                    step="0.1"
+                    x-model="voltage"
+                    @input="updateValues()"
+                    class="slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                >
+            </div>
+        </div>
+
+        <div class="space-y-4" x-data="{ minTemperature: 900, maxTemperature: 1000 }">
+            <div class="flex justify-between items-center">
+                <label for="current-slider" class="block text-lg font-medium text-gray-700">Температура электролита</label>
+                <span class="text-lg font-semibold text-indigo-600" x-text="temperature"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                <span x-text="minTemperature"></span>
+                <span x-text="maxTemperature"></span>
+            </div>
+            <div class="relative">
+                <input
+                    id="temperature-slider"
+                    type="range"
+                    :min="minTemperature"
+                    :max="maxTemperature"
+                    step="1"
+                    x-model="temperature"
+                    @input="updateValues()"
+                    class="slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                >
+            </div>
+        </div>
+
+        <div class="space-y-4" x-data="{ minConcentration: 2, maxConcentration: 6 }">
+            <div class="flex justify-between items-center">
+                <label for="current-slider" class="block text-lg font-medium text-gray-700">Концентрация глинозёма</label>
+                <span class="text-lg font-semibold text-indigo-600" x-text="concentration + ' В'"></span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-500 mb-2">
+                <span x-text="minConcentration"></span>
+                <span x-text="maxConcentration"></span>
+            </div>
+            <div class="relative">
+                <input
+                    id="concentration-slider"
+                    type="range"
+                    :min="minConcentration"
+                    :max="maxConcentration"
+                    step="1"
+                    x-model="concentration"
+                    @input="updateValues()"
+                    class="slider w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                >
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
