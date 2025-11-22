@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Калькулятор сплавов - Электролизёр-360{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6 text-center">Калькулятор сплавов</h1>
+  <div x-data="alloyCalculator()" x-init="init()">
+      <!-- Основной контейнер в стиле макета -->
+      <div class="bg-white rounded-2xl shadow-lg p-5 max-w-md mx-auto border border-gray-200">
+
+        <!-- Поле ввода Al + -->
+        <div class="mb-4">
+          <input type="text" 
+                :value="formulaInput"
+                readonly
+                class="w-full p-2 border border-gray-300 rounded-lg text-xl font-mono text-center bg-gray-50"
+                placeholder="Al +">
+        </div>
+
+        <!-- Кнопки элементов и управления -->
+        <div class="flex gap-4">
+          <!-- Левая панель: сетка элементов -->
+          <div class="grid grid-cols-3 gap-2 flex-1">
+            {% for element in ['Mg', 'Mn', 'Cu', 'Si', 'Fe', 'Zn', 'Li'] %}
+              <button @click="addElement('{{ element }}')"
+                      :disabled="selectedElements.includes('{{ element }}')"
+                      class="p-2 border border-gray-300 rounded text-lg font-medium transition-colors
+                            disabled:opacity-50 disabled:bg-gray-100
+                            hover:bg-blue-100"
+                      x-bind:class="selectedElements.includes('{{ element }}') ? 'bg-blue-200 border-blue-400' : ''">
+                {{ element }}
+              </button>
+            {% endfor %}
+          </div>
+
+          <!-- Правая панель: кнопки C, +, = -->
+          <div class="flex flex-col gap-2">
+            <button @click="removeLast()"
+                    :disabled="selectedElements.length === 0"
+                    class="p-2 border border-gray-300 rounded text-lg font-medium hover:bg-red-100 transition-colors
+                          disabled:opacity-50">
+              C
+            </button>
+            <button @click="addNextElement()"
+                    :disabled="availableElements.length === 0"
+                    class="p-2 border border-gray-300 rounded text-lg font-medium hover:bg-yellow-100 transition-colors
+                          disabled:opacity-50">
+              +
+            </button>
+            <button @click="calculateResult()"
+                    class="p-2 border border-gray-300 rounded text-lg font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+              =
+            </button>
+          </div>
+        </div>
+
+        <!-- Блок ИТОГ -->
+        <div class="mt-6">
+          <h2 class="text-xl font-bold mb-3">ИТОГ</h2>
+
+          <!-- Загрузка данных -->
+          <div x-show="loading" class="text-center py-4">
+            <div class="inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-gray-500 mt-2">Загрузка данных...</p>
+          </div>
+
+          <!-- Результат: найден -->
+          <div x-show="currentAlloy && !notFound && !loading"
+              x-transition
+              class="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
+            <div class="font-semibold text-blue-700" x-text="currentAlloy.name"></div>
+            <div class="text-sm text-gray-600" x-text="currentAlloy.id"></div>
+            <div class="text-xs text-gray-500" x-text="currentAlloy.notes"></div>
+            <div class="mt-3 pt-2 border-t">
+              <div class="text-xs text-gray-600 mb-1">Состав:</div>
+              <div class="flex flex-wrap gap-1">
+                <template x-for="(val, key) in currentAlloy">
+                  <template x-if="['Al','Mg','Si','Cu','Fe','Mn','Zn','Li','C'].includes(key) && val > 0">
+                    <span class="px-1.5 py-0.5 bg-white text-xs border rounded" 
+                          x-text="`${key}: ${Number(val).toFixed(1)}%`"></span>
+                  </template>
+                </template>
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Плотность:</span> <span x-text="currentAlloy.density_gcm3 + ' г/см³'"></span></div>
+              <div><span class="text-gray-500">Прочность:</span> <span x-text="currentAlloy.tensile_strength_MPa + ' МПа'"></span></div>
+              <div><span class="text-gray-500">Проводимость:</span> <span x-text="currentAlloy.conductivity_ww + ' % IACS'"></span></div>
+              <div><span class="text-gray-500">Удлинение:</span> <span x-text="currentAlloy.elongation_pct + ' %'"></span></div>
+            </div>
+          </div>
+
+          <!-- Ошибка: не найден -->
+          <div x-show="notFound && !loading"
+              x-transition
+              class="p-4 border-l-4 border-red-500 bg-red-50 rounded">
+            <div class="flex">
+              <svg class="w-5 h-5 text-red-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+              <span class="text-red-700">
+                Сплав <span class="font-mono" x-text="searchQuery"></span> не найден.
+              </span>
+            </div>
+          </div>
+
+          <!-- Начальное состояние (Технический алюминий) -->
+          <div x-show="!currentAlloy && !notFound && !loading"
+              x-transition
+              class="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
+            <div class="font-semibold text-blue-700">Технический алюминий</div>
+            <div class="text-sm text-gray-600">Al</div>
+            <div class="text-xs text-gray-500">
+              Стандартный технический алюминий (марка АД0). Высокая коррозионная стойкость, хорошая свариваемость.
+            </div>
+            <div class="mt-3 pt-2 border-t">
+              <div class="text-xs text-gray-600 mb-1">Состав:</div>
+              <span class="px-1.5 py-0.5 bg-white text-xs border rounded">Al: 99.0%</span>
+              <span class="px-1.5 py-0.5 bg-white text-xs border rounded text-gray-400">остальные: ≤1.0%</span>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div><span class="text-gray-500">Плотность:</span> 2.70 г/см³</div>
+              <div><span class="text-gray-500">Прочность:</span> 90 МПа</div>
+              <div><span class="text-gray-500">Проводимость:</span> 58 % IACS</div>
+              <div><span class="text-gray-500">Удлинение:</span> 35 %</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+<script>
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('alloyCalculator', () => ({
+      // === Состояние ===
+      selectedElements: [],
+      currentAlloy: null,
+      notFound: false,
+      loading: true,
+      searchQuery: '',
+      alloys: [],
+
+      // === Вспомогательные свойства ===
+      get formulaInput() {
+        return this.selectedElements.length === 0 
+          ? 'Al' 
+          : `Al-${this.selectedElements.join('-')}`;
+      },
+
+      get availableElements() {
+        return ['Mg', 'Mn', 'Cu', 'Si', 'Fe', 'Zn', 'Li', 'C']
+          .filter(el => !this.selectedElements.includes(el));
+      },
+
+      // === Инициализация ===
+      init() {
+        this.loadAlloys();
+      },
+
+      // === Загрузка данных ===
+      async loadAlloys() {
+        try {
+          const res = await fetch('/api/alloys');
+          this.alloys = await res.json();
+          this.currentAlloy = this.alloys.find(a => a.id === 'Al') || null;
+        } catch (e) {
+          console.error('Ошибка загрузки сплавов:', e);
+          this.currentAlloy = { 
+            name: 'Технический алюминий', 
+            id: 'Al',
+            density_gcm3: 2.70,
+            tensile_strength_MPa: 90,
+            conductivity_ww: 58,
+            elongation_pct: 35,
+            Al: 99.0,
+            notes: 'Стандартный технический алюминий (марка АД0). Высокая коррозионная стойкость, хорошая свариваемость.'
+          };
+        } finally {
+          this.loading = false;
+        }
+      },
+
+      // === Действия пользователя ===
+      addElement(element) {
+        if (!this.selectedElements.includes(element) && this.selectedElements.length < 7) {
+          this.selectedElements.push(element);
+          this.selectedElements.sort(); // нормализация: Al-Mg-Si = Al-Si-Mg
+        }
+      },
+
+      addNextElement() {
+        const next = this.availableElements[0];
+        if (next) this.addElement(next);
+      },
+
+      removeLast() {
+        if (this.selectedElements.length > 0) {
+          this.selectedElements.pop();
+          this.search();
+        }
+      },
+
+      calculateResult() {
+        this.search();
+      },
+
+      // === Поиск сплава ===
+      search() {
+        this.notFound = false;
+        this.searchQuery = this.selectedElements.length === 0 ? 'Al' : 'Al-' + this.selectedElements.join('-');
+        
+        const found = this.alloys.find(a => a.id === this.searchQuery);
+        this.currentAlloy = found || null;
+        this.notFound = !found;
+      }
+    }));
+  });
+</script>
+{% endblock %}
