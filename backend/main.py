@@ -15,7 +15,7 @@ templates = Jinja2Templates(directory=templates_path)
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-app.include_router(router)
+app.include_router(calc_router)
 
 @app.get("/")
 async def read_root(request: Request):

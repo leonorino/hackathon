@@ -1,3 +1,4 @@
 node_modules/
 .env/
 frontend/static/css/main.css
+__pycache__/

@@ -51,11 +51,11 @@ def calculate_metrics(current, voltage, temperature, concentration):
 @calc_router.post("/api/update-values")
 async def update_values(request: Request):
     data = await request.json()
-    current = data.get("current")
-    voltage = data.get("voltage")
-    temperature = data.get("temperature")
-    concentration = data.get("concentration")
-        
+    current = float(data.get("current"))
+    voltage = float(data.get("voltage"))
+    temperature = float(data.get("temperature"))
+    concentration = float(data.get("concentration"))
+
     metrics = calculate_metrics(current, voltage, temperature, concentration)
 
     return metrics

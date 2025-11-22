@@ -7,10 +7,15 @@
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({current: this.current, voltage: this.voltage, temperature: this.temperature, concentration: this.concentration})
+            }).then(response => response.json()).then(data => {
+                console.log(data);
+                this.eta = data.eta;
+                this.E_ud = data.E_ud;
+                this.anode_consumption = data.anode_consumption;
             })
         }, 1000);
     }
-}">
+}" x-init="updateValues()">
     <h1 class="text-3xl font-bold text-center text-gray-800 mb-8"></h1>
 
     <div class="bg-white rounded-xl shadow-lg p-6 space-y-8">
