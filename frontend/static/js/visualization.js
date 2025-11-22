@@ -300,26 +300,37 @@ const Visualization = {
     },
 
     updateVisualization() {
-        const warningContainer = document.getElementById('warningContainer');
-        warningContainer.innerHTML = '';
-        
-        const warnings = [];
-        if (state?.temperature_warning) {
-            warnings.push(state.temperature_warning);
-        }
-        if (state?.voltage_warning) {
-            warnings.push(state.voltage_warning);
-        }
-        
-        if (warnings.length > 0) {
-            warnings.forEach(warning => {
-                const warningEl = document.createElement('div');
-                warningEl.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-2 rounded-lg';
-                warningEl.textContent = warning;
-                warningContainer.appendChild(warningEl);
-            });
-        }
-    }
+         const warningContainer = document.getElementById('warningContainer');
+         warningContainer.innerHTML = '';
+         
+         const warnings = [];
+         if (state?.temperature_warning) {
+             warnings.push(state.temperature_warning);
+         }
+         if (state?.voltage_warning) {
+             warnings.push(state.voltage_warning);
+         }
+         
+         if (warnings.length > 0) {
+             warnings.forEach(warning => {
+                 const warningEl = document.createElement('div');
+                 warningEl.className = 'bg-red-100 border border-red-400 text-red-700 px-4 py-3 mb-2 rounded-lg';
+                 warningEl.textContent = warning;
+                 warningContainer.appendChild(warningEl);
+             });
+         }
+
+         const schemaContainer = document.getElementById('schemaContainer');
+         if (schemaContainer) {
+             if (state?.temperature_warning || state?.voltage_warning) {
+                 schemaContainer.classList.remove('shadow-green-300');
+                 schemaContainer.classList.add('shadow-lg', 'shadow-red-300');
+             } else {
+                 schemaContainer.classList.remove('shadow-red-300');
+                 schemaContainer.classList.add('shadow-lg', 'shadow-green-300');
+             }
+         }
+     }
 };
 
 document.addEventListener('DOMContentLoaded', function() {
