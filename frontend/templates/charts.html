@@ -1,0 +1,159 @@
+<div class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+    <!-- Выход по току (Eta) -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow">
+        <h3 class="font-semibold mb-2">Выход по току (Eta), %</h3>
+        <canvas id="etaChart" x-ref="etaChartCanvas"></canvas>
+    </div>
+
+    <!-- Удельный расход энергии (E_ud) -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow">
+        <h3 class="font-semibold mb-2">Уд. расход энергии (E_ud), кВт·ч/т Al</h3>
+        <canvas id="eudChart" x-ref="eudChartCanvas"></canvas>
+    </div>
+
+    <!-- Расход анода -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-4 shadow md:col-span-2">
+        <h3 class="font-semibold mb-2">Расход анодного материала, кг/т Al</h3>
+        <canvas id="anodeChart" x-ref="anodeChartCanvas"></canvas>
+    </div>
+</div>
+
+<script>
+    // Убедимся, что DOM загружен и Alpine инициализирован
+    document.addEventListener('alpine:init', () => {
+        // Регистрируем плагин для аннотаций, если нужно
+        // Chart.register(ChartDataLabels); // Пример, если потребуется
+    });
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        // Инициализация Chart.js при создании DOM элемента, если Alpine не управляет этим напрямую
+        // Этот подход используется, если блок chart.html вставляется после инициализации Alpine
+        // В ином случае, инициализация и обновление лучше делать через Alpine x-init и x-effect
+
+        // Пример инициализации, если она не происходит через Alpine
+        // const etaCtx = document.getElementById('etaChart')?.getContext('2d');
+        // if (etaCtx) {
+        //     new Chart(etaCtx, { type: 'line', ... });
+        // }
+    });
+
+    // Предполагается, что этот скрипт выполняется в контексте Alpine компонента,
+    // где доступны $data.eta, $data.E_ud, $data.anode_consumption и $refs
+    // Поэтому инициализация и обновление Chart.js происходит через Alpine
+
+    // Функция для обновления данных и стиля графика Eta
+    function updateEtaChart(chart, etaValue) {
+        if (!chart) return;
+        const isCritical = etaValue <= 60;
+        const isWarning = etaValue <= 85 && !isCritical;
+        const borderColor = isCritical ? 'rgb(239, 68, 68)' : isWarning ? 'rgb(234, 179, 8)' : 'rgb(34, 197, 94)';
+        const backgroundColor = isCritical ? 'rgba(239, 68, 68, 0.1)' : isWarning ? 'rgba(234, 179, 8, 0.1)' : 'rgba(34, 197, 94, 0.1)';
+        const pointStyle = isCritical ? 'crossRot' : 'circle';
+        const pointBackgroundColor = isCritical ? 'rgb(239, 68, 68)' : 'rgb(34, 197, 94)';
+
+        chart.data.datasets[0].data = [etaValue];
+        chart.data.datasets[0].borderColor = borderColor;
+        chart.data.datasets[0].backgroundColor = backgroundColor;
+        chart.data.datasets[0].pointStyle = pointStyle;
+        chart.data.datasets[0].pointBackgroundColor = pointBackgroundColor;
+        chart.update();
+    }
+
+    // Функция для обновления данных графика E_ud
+    function updateEudChart(chart, eudValue) {
+        if (!chart) return;
+        chart.data.datasets[0].data = [eudValue];
+        chart.update();
+    }
+
+    // Функция для обновления данных графика расхода анода
+    function updateAnodeChart(chart, anodeValue) {
+        if (!chart) return;
+        chart.data.datasets[0].data = [anodeValue];
+        chart.update();
+    }
+
+    // Объект для храненияchartInstance'ов, если они инициализируются здесь
+    // const chartInstances = {};
+</script>
+
+<!-- Alpine блок для инициализации и обновления -->
+<template x-if="$data.eta !== null">
+    <div x-init="
+        // Инициализация Chart.js при монтировании Alpine компонента
+        const commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 300, easing: 'easeOutQuart' },
+            scales: { y: { beginAtZero: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        };
+
+        // Eta Chart
+        const etaCtx = $refs.etaChartCanvas.getContext('2d');
+        etaChartInstance = new Chart(etaCtx, {
+            type: 'line',
+            data: {
+                labels: ['Текущее'],
+                datasets: [{
+                    label: 'Eta (%)',
+                    data: [$data.eta],
+                    borderColor: 'rgb(34, 197, 94)', // Зелёный по умолчанию
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    pointStyle: 'circle',
+                    pointRadius: 5
+                }]
+            },
+            options: commonOptions
+        });
+
+        // E_ud Chart
+        const eudCtx = $refs.eudChartCanvas.getContext('2d');
+        eudChartInstance = new Chart(eudCtx, {
+            type: 'line',
+            data: {
+                labels: ['Текущее'],
+                datasets: [{
+                    label: 'E_ud (кВт·ч/т)',
+                    data: [$data.E_ud],
+                    borderColor: 'rgb(59, 130, 246)', // Синий
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: commonOptions
+        });
+
+        // Anode Chart
+        const anodeCtx = $refs.anodeChartCanvas.getContext('2d');
+        anodeChartInstance = new Chart(anodeCtx, {
+            type: 'line',
+            data: {
+                labels: ['Текущее'],
+                datasets: [{
+                    label: 'Расход (кг/т)',
+                    data: [$data.anode_consumption],
+                    borderColor: 'rgb(168, 85, 247)', // Фиолетовый
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    tension: 0.4,
+                    pointRadius: 4
+                }]
+            },
+            options: commonOptions
+        });
+    "
+    x-effect="
+        // Обновляем графики при изменении метрик
+        // Убедитесь, чтоchartInstance'ы существуют
+        updateEtaChart(etaChartInstance, $data.eta);
+        updateEudChart(eudChartInstance, $data.E_ud);
+        updateAnodeChart(anodeChartInstance, $data.anode_consumption);
+    ">
+        <!-- Скрытый div для работы Alpine -->
+        <div style="display: none;"></div>
+    </template>

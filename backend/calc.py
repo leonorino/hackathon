@@ -5,13 +5,13 @@ router = APIRouter()
 def calculate_metrics(current, voltage, temperature, concentration):
     eta0 = 90.0
 
-    critical_error = None
+    temperature_warning = None
     if temperature <= 950:
         eta = 70.0
-        critical_error = "Опасность застывания электролита!"
+        temperature_warning = "Опасность застывания электролита!"
     elif concentration < 3.0:
         eta = 60.0
-        critical_error = "Анодный Эффект! Срочно подать глинозём!"
+        temperature_warning = "Анодный Эффект! Срочно подать глинозём!"
     else:
         
         if temperature == 960:
@@ -44,7 +44,7 @@ def calculate_metrics(current, voltage, temperature, concentration):
         "eta": round(eta, 2),
         "E_ud": round(E_ud, 1),
         "anode_consumption": round(anode_consumption, 1),
-        "critical_error": critical_error,
+        "temperature_warning": temperature_warning,
         "voltage_warning": voltage_warning
     }
 
