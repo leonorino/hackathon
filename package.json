@@ -3,10 +3,11 @@
     "build:tailwind": "tailwindcss -i ./frontend/static/css/input.css -o ./frontend/static/css/main.css",
     "watch:tailwind": "tailwindcss -i ./frontend/static/css/input.css -o ./frontend/static/css/main.css --watch",
     "start:backend": ".env/bin/python3 backend/main.py",
-    "dev": "npm run watch:tailwind & npm run start:backend"
+    "dev": "npm-run-all -p start:backend watch:tailwind"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.17",
+    "npm-run-all": "^4.1.5",
     "tailwindcss": "^4.1.17"
   }
 }
