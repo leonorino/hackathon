@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 import uvicorn
 import json
-from calc import router
+from calc import calc_router
 
 app = FastAPI()
 
@@ -19,7 +19,7 @@ if static_path.exists():
     app.mount("/static", StaticFiles(directory=static_path), name="static")
     app.mount("/static_back", StaticFiles(directory=Path(__file__).parent / "static"), name="static_back")
 
-app.include_router(router)
+app.include_router(calc_router)
 
 # Эндпоинты
 @app.get("/")
