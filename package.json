@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "build:tailwind": "tailwindcss -i ./frontend/static/css/input.css -o ./frontend/static/css/main.css",
+    "watch:tailwind": "tailwindcss -i ./frontend/static/css/input.css -o ./frontend/static/css/main.css --watch",
+    "start:backend": ".env/bin/python3 backend/main.py",
+    "dev": "npm run watch:tailwind & npm run start:backend"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.17",
+    "tailwindcss": "^4.1.17"
+  }
+}
