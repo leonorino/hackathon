@@ -10,6 +10,4 @@ async def update_values(request: Request):
     temperature = data.get("temperature")
     concentration = data.get("concentration")
     
-    print(f"Updated values - Current: {current}A, Voltage: {voltage}V, Temperature: {temperature}K, Concentration: {concentration}")
-    
     return {"status": "success", "values": data}

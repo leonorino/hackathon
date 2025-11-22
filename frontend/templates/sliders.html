@@ -1,9 +1,4 @@
-{% block body %}
-<div class="w-full max-w-2xl mx-auto" x-data="{ 
-    current: 300, 
-    voltage: 4.0, 
-    temperature: 950, 
-    concentration: 4,
+<div class="w-full max-w-2xl mx-auto" x-data="{
     updateTimeout: null,
     updateValues() {
         clearTimeout(this.updateTimeout);
@@ -111,4 +106,3 @@
         </div>
     </div>
 </div>
-{% endblock %}

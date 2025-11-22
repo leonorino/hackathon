@@ -1,8 +1,21 @@
 {% extends "base.html" %}
 
 {% block body %}
-<div class="w-full max-w-md mx-auto text-center">
-    {% include "sliders.html" %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full place-items-center" x-data="{
+    current: 300, 
+    voltage: 4.0, 
+    temperature: 950, 
+    concentration: 4,
+    eta: null,
+    E_ud: null,
+    anode_consumption: null,
+}">
+    <div class="w-full">
+        {% include "schema.html" %}
+    </div>
+    <div class="w-full">
+        {% include "sliders.html" %}
+    </div>
 </div>
 
 {% include "navbar.html" %}

@@ -1,0 +1,76 @@
+<div class="w-full relative" x-data="schemaTooltip()" @init="init()">
+  <div id="schemasvg" class=""></div>
+  <canvas id="effectsCanvas" class="absolute top-0 left-0" @mousemove="trackMouse" @click="logCoords"></canvas>
+  
+  <div x-show="activeTooltip" :style="`left: ${tooltipX}%; top: ${tooltipY}%;`" 
+       class="absolute bg-gray-900 text-white px-2 py-1 rounded text-sm pointer-events-none z-10">
+    <span x-text="activeTooltip"></span>
+  </div>
+</div>
+
+<script>
+  function schemaTooltip() {
+    return {
+      regions: [
+        { x_start: 32, y_start: 42, x_end: 62, y_end: 58, text: 'Аноды' },
+        { x_start: 30, y_start: 77, x_end: 83, y_end: 83, text: 'Катод' },
+        { x_start: 29, y_start: 65, x_end: 65, y_end: 70, text: 'Алюминий'}
+      ],
+      activeTooltip: '',
+      tooltipX: 0,
+      tooltipY: 0,
+      
+      init() {
+        fetch('/static/assets/schema.svg')
+          .then(r => r.text())
+          .then(svg => {
+            document.getElementById('schemasvg').innerHTML = svg;
+            this.updateCanvasSize();
+            
+            const resizeObserver = new ResizeObserver(() => this.updateCanvasSize());
+            resizeObserver.observe(document.getElementById('schemasvg'));
+          });
+      },
+      
+      updateCanvasSize() {
+        const svgEl = document.querySelector("#schemasvg svg");
+        const canvas = document.getElementById("effectsCanvas");
+        canvas.width = svgEl.clientWidth;
+        canvas.height = svgEl.clientHeight;
+      },
+      
+      trackMouse(e) {
+        const canvas = document.getElementById('effectsCanvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const xPercent = (x / canvas.width) * 100;
+        const yPercent = (y / canvas.height) * 100;
+        
+        console.log(`Mouse: ${xPercent.toFixed(2)}%, ${yPercent.toFixed(2)}%`);
+        
+        const region = this.regions.find(r => 
+          xPercent >= r.x_start && xPercent <= r.x_end && 
+          yPercent >= r.y_start && yPercent <= r.y_end
+        );
+        
+        if (region) {
+          this.activeTooltip = region.text;
+          this.tooltipX = xPercent;
+          this.tooltipY = yPercent - 5;
+        } else {
+          this.activeTooltip = '';
+        }
+      },
+      
+      logCoords(e) {
+        const canvas = document.getElementById('effectsCanvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const xPercent = ((x / canvas.width) * 100).toFixed(2);
+        const yPercent = ((y / canvas.height) * 100).toFixed(2);
+      }
+    }
+  }
+</script>
